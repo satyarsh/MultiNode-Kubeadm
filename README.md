@@ -1,6 +1,7 @@
 # Kubernetes Multinode Cluster
 
 This is a small Kubernetes lab project where I built a **3-node Kubernetes cluster** using **Debian 13 VMs** and `kubeadm`. <br>
+
 If you don't know what a VM is, what are you doing here??
 
 The goal of this repo is mainly to document the process of setting up a Kubernetes cluster from scratch, including the container runtime, `kubeadm`, `crictl`, networking, CNI installation, troubleshooting, and a few basic tests to make sure everything is actually working.
