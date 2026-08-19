@@ -47,7 +47,7 @@ k8s-worker-02   →  192.168.0.194
 Your IP addresses will be different. You can find the IP address of a Debian VM with:
 
 ```bash
-ip a | grep inet
+ip -4 addr
 ```
 
 Make sure the nodes can communicate with each other before starting the Kubernetes installation:
@@ -156,7 +156,7 @@ echo "192.168.0.1xx  node1" | sudo tee -a /etc/hosts
 
 ### Initializing the control-plane (leader)
 ```bash
-# Use ip a | grep inet to find the IP of your node
+# Use ip a | grep -w inet to find the IP of your node
 sudo kubeadm init \
   --apiserver-advertise-address=192.168.0.192 \
   --pod-network-cidr=10.244.0.0/16
