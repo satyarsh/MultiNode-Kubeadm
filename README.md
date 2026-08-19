@@ -10,6 +10,83 @@ The cluster uses **bridged networking**, so the VMs can communicate with each ot
 
 This isn't meant to be a production-ready Kubernetes deployment per say, but It's a starting point for beginners to learn how the different pieces fit together.
 
+## Virtual Machine Setup
+
+For this lab, I used VirtualBox to create three Debian 13 virtual machines.
+
+### VirtualBox
+
+Create 3 VMs, one for each Kubernetes node.
+
+A simple setup would look like this:
+
+| VM               | Role          | CPUs |    RAM | Network         |
+| ---------------- | ------------- | ---: | -----: | --------------- |
+| `k8s-control-01` | Control plane |   2 | 2–4 GB | Bridged Adapter |
+| `k8s-worker-01`  | Worker        |   2 | 2–4 GB | Bridged Adapter |
+| `k8s-worker-02`  | Worker        |   2 | 2–4 GB | Bridged Adapter |
+
+### Network Configuration
+
+Set the network adapter of **each VM** to:
+
+```text
+Attached to: Bridged Adapter
+```
+
+With bridged networking, each VM appears as a separate machine on your network and gets **its own IP address**.
+
+For example:
+
+```text
+k8s-control-01  →  192.168.0.192
+k8s-worker-01   →  192.168.0.193
+k8s-worker-02   →  192.168.0.194
+```
+
+Your IP addresses will be different. You can find the IP address of a Debian VM with:
+
+```bash
+ip a | grep inet
+```
+
+Make sure the nodes can communicate with each other before starting the Kubernetes installation:
+
+```bash
+ping <other-node-ip>
+```
+
+For example, from the control-plane node:
+
+```bash
+ping 192.168.0.193
+ping 192.168.0.194
+```
+
+### Debian Installation
+
+Install the latest Debian stable (headless or with a desktop) on each VM. During installation, give each machine a unique hostname so that you can easily identify the nodes.
+
+#### How to change the hostname afterwards if you're unhappy with the hostnames
+```bash
+sudo nano /etc/hostname
+```
+
+You should also make sure that the machines can resolve each other's hostnames. If your network does not provide local hostname resolution, you can add the nodes to `/etc/hosts`:
+
+```text
+192.168.0.192  k8s-control-01
+192.168.0.193  k8s-worker-01
+192.168.0.194  k8s-worker-02
+```
+
+### More Advanced VM Setup
+
+If you're running Linux and want more control and performance for your virtual machines, consider using [virt-manager](https://wiki.archlinux.org/title/Virt-Manager) instead of VirtualBox.
+
+`virt-manager` uses QEMU/KVM and is a great option if you want open source non Oracle based product to experiment with.
+
+however, VirtualBox is perfectly fine and keeps the setup relatively straightforward. 
 
 ## Environment
 
