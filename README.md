@@ -126,7 +126,7 @@ sudo swapoff -a
 sudo sed -i '/swap/d' /etc/fstab
 ```
 
-### Enabling SystemD Cgroup Driver
+### Enabling Systemd Cgroup Driver
 ```bash
 sudo nano /etc/containerd/config.toml
 ```
