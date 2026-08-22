@@ -126,6 +126,24 @@ sudo swapoff -a
 sudo sed -i '/swap/d' /etc/fstab
 ```
 
+### Enabling SystemD Cgroup Driver
+```bash
+sudo nano /etc/containerd/config.toml
+```
+
+```bash
+# Add this to the bottom
+[plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
+  [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+    SystemdCgroup = true
+```
+
+```bash
+sudo systemctl restart containerd
+sudo systemctl restart kubelet
+```
+
+
 ### Enable CRI
 ```bash
 sudo cat /etc/containerd/config.toml | grep -A2 disabled_plugins
@@ -157,23 +175,49 @@ echo "192.168.0.1xx  node1" | sudo tee -a /etc/hosts
 ### Initializing the control-plane (leader)
 ```bash
 # Use ip a | grep -w inet to find the IP of your node
-sudo kubeadm init \
-  --apiserver-advertise-address=192.168.0.192 \
-  --pod-network-cidr=10.244.0.0/16
+# Then place it on the kubeadm-config.yaml found in repository's example file
+# Don't change the podSubnet just the InitConfiguration 
+sudo kubeadm init --config kubeadm-config.yaml
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
-### Install a CNI (Flannel or Calico):
+### Install a CNI:
 ```bash
-# Flannel (Aka the easiest)
-kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-
-# Calico
-https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises
+# Installing Flannel (Aka the easiest)
+# Check the flannel-io for the latest updates and changes
+https://github.com/flannel-io/flannel
 ```
+
+```bash
+# Install the CNI plugin on leader
+ARCH=$(uname -m)
+  case $ARCH in
+    armv7*) ARCH="arm";;
+    aarch64) ARCH="arm64";;
+    x86_64) ARCH="amd64";;
+  esac
+mkdir -p /opt/cni/bin
+curl -O -L https://github.com/containernetworking/plugins/releases/download/v1.7.1/cni-plugins-linux-$ARCH-v1.7.1.tgz
+tar -C /opt/cni/bin -xzf cni-plugins-linux-$ARCH-v1.7.1.tgz
+```
+```bash
+# Finally
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+```
+
+```bash
+# Check to see if flannel is working
+kubectl get pods -n kube-flannel -o wide 
+
+# You should see:
+# NAME                    READY   STATUS    NODE
+# kube-flannel-ds-xxxxx   1/1     Running   node1
+# kube-flannel-ds-yyyyy   1/1     Running   node2
+```
+
 
 ### Join your worker nodes
 ```bash
@@ -187,6 +231,8 @@ sudo systemctl status kubelet --no-pager -l
 
 kubectl get nodes
 kubectl get pods -A
+kubectl get pods -A -o wide
+kubectl get nodes -A -o wide
 
 # Checking if apiserver container is running
 sudo crictl ps -a
